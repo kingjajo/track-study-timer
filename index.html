@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Timer with Goals</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --danger: #ef4444;
+    --success: #16a34a;
+    --bg-light: #f8fafc;
+    --text-dark: #1e293b;
+    --radius: 18px;
+    --shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+    margin: 0;
+    padding: 0;
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    color: white;
+    text-align: center;
+    padding: 1.3rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow);
+  }
+
+  .container {
+    max-width: 850px;
+    margin: 2.5rem auto;
+    background: white;
+    padding: 2.2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.6s ease;
+  }
+
+  .date-display {
+    text-align: center;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+
+  .agenda-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  input, button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 1rem;
+    transition: 0.2s ease;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 6px rgba(37,99,235,0.3);
+  }
+
+  button {
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+  }
+
+  button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 1.5rem;
+  }
+
+  li {
+    background: #f9fafb;
+    padding: 1.2rem 1rem;
+    margin: .6rem 0;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+  }
+
+  li:hover {
+    transform: translateY(-2px);
+    background: #f1f5f9;
+  }
+
+  li div {
+    flex: 1;
+  }
+
+  li strong {
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+  }
+
+  .agenda-date {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .delete-btn {
+    background: var(--danger);
+    padding: .4rem .8rem;
+    border-radius: 8px;
+  }
+
+  .delete-btn:hover {
+    background: #dc2626;
+  }
+
+  /* Modal styling */
+  .modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(15,23,42,0.92);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    z-index: 999;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .timer-display {
+    font-size: 7rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+  }
+
+  .goal-list {
+    text-align: left;
+    margin-bottom: 1.8rem;
+    font-size: 1.2rem;
+    background: rgba(255,255,255,0.05);
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+  }
+
+  .end-btn {
+    background: var(--danger);
+    font-size: 1.2rem;
+    padding: .9rem 2.2rem;
+    border-radius: 14px;
+    font-weight: 600;
+  }
+
+  .end-btn:hover {
+    background: #dc2626;
+  }
+
+  .modal-card {
+    background: white;
+    color: #111;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .modal-card h2 {
+    color: var(--primary);
+  }
+
+  .reflection-goals {
+    text-align: left;
+    margin: 1rem 0;
+  }
+
+  .reflection-goals label {
+    display: block;
+    margin-bottom: .7rem;
+    color: #1e293b;
+    font-weight: 500;
+  }
+
+  .reflection-goals input {
+    accent-color: var(--primary);
+    margin-right: .5rem;
+  }
+
+  .done-btn {
+    background: var(--success);
+    padding: .8rem 1.8rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .done-btn:hover {
+    background: #15803d;
+  }
+
+  @keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === RESPONSIVE MOBILE === */
+  @media (max-width: 600px) {
+    header {
+      font-size: 1.3rem;
+      padding: 0.8rem;
+    }
+
+    .container {
+      margin: 1rem;
+      padding: 1rem;
+      border-radius: 14px;
+    }
+
+    .agenda-input {
+      flex-direction: column;
+    }
+
+    input, button {
+      width: 70%;
+      font-size: 0.95rem;
+    }
+
+    li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+    }
+
+    li strong {
+      font-size: 1rem;
+    }
+
+    .delete-btn {
+      align-self: flex-end;
+      margin-top: 6px;
+      font-size: 0.85rem;
+    }
+
+    .timer-display {
+      font-size: 3rem;
+    }
+
+    .goal-list {
+      width: 20%;
+      font-size: 0.7rem;
+    
+  }
+</style>
+
+</head>
+<body>
+
+<header>📚 Study Timer App</header>
+
+<div class="container">
+  <div class="date-display" id="currentDate"></div>
+
+  <div class="agenda-input">
+    <input type="text" id="agendaName" placeholder="Study Agenda (e.g. Math)" />
+    <input type="text" id="goals" placeholder="Goals (comma separated)" />
+    <input type="number" id="timeLimit" placeholder="Time (minutes)" min="1" />
+    <button onclick="addAgenda()">Add Agenda</button>
+  </div>
+
+  <ul id="agendaList"></ul>
+</div>
+
+<!-- Study Modal -->
+<div class="modal" id="studyModal">
+  <h1 id="currentAgenda"></h1>
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="goal-list" id="goalList"></div>
+  <button class="end-btn" onclick="endStudy()">End Study</button>
+</div>
+
+<!-- Review Modal -->
+<div class="modal" id="reviewModal">
+  <div class="modal-card">
+    <h2>🎯 Study Review</h2>
+    <p>Did you achieve your goals for <strong id="reflectAgenda"></strong>?</p><br>
+    <p style="color: red; text-align: left;">Be Sincere. Tip each goal if achieved or study again.</p>
+    <div class="reflection-goals" id="reflectionGoals"></div>
+    <button class="done-btn" onclick="completeReflection()">✅ Done</button>
+  </div>
+</div>
+
+<script>
+  const currentDate = document.getElementById("currentDate");
+  const agendaList = document.getElementById("agendaList");
+  const studyModal = document.getElementById("studyModal");
+  const reviewModal = document.getElementById("reviewModal");
+  const timerDisplay = document.getElementById("timerDisplay");
+  const goalList = document.getElementById("goalList");
+  const reflectionGoals = document.getElementById("reflectionGoals");
+  const reflectAgenda = document.getElementById("reflectAgenda");
+
+  let agendas = [];
+  let timerInterval;
+  let currentAgendaIndex = null;
+  let remainingTime = 0;
+
+  // Display current date
+  const date = new Date();
+  currentDate.textContent = date.toDateString();
+
+  // ✅ Load from localStorage
+  window.addEventListener("load", () => {
+    const savedAgendas = JSON.parse(localStorage.getItem("agendas"));
+    if (savedAgendas && Array.isArray(savedAgendas)) {
+      agendas = savedAgendas;
+      renderAgendas();
+    }
+
+    const savedSession = JSON.parse(localStorage.getItem("activeSession"));
+    if (savedSession) {
+      currentAgendaIndex = savedSession.currentAgendaIndex;
+      remainingTime = savedSession.remainingTime;
+      if (savedSession.active) {
+        const agenda = agendas[currentAgendaIndex];
+        if (agenda) {
+          document.getElementById("currentAgenda").textContent = agenda.name;
+          goalList.innerHTML = agenda.goals.map(g => `<div>• ${g}</div>`).join("");
+          studyModal.classList.add("active");
+          startTimer();
+        }
+      }
+    }
+  });
+
+  function saveSession(active) {
+    localStorage.setItem("activeSession", JSON.stringify({
+      currentAgendaIndex,
+      remainingTime,
+      active
+    }));
+  }
+
+  function addAgenda() {
+    const name = document.getElementById("agendaName").value.trim();
+    const goals = document.getElementById("goals").value.split(",").map(g => g.trim()).filter(Boolean);
+    const time = parseInt(document.getElementById("timeLimit").value) * 60;
+    const date = new Date().toLocaleDateString();
+
+
+    if (!name || goals.length === 0 || isNaN(time)) {
+      alert("Please fill all fields correctly!");
+      return;
+    }
+
+    agendas.push({ name, goals, time });
+    localStorage.setItem("agendas", JSON.stringify(agendas));
+    renderAgendas();
+
+    document.getElementById("agendaName").value = "";
+    document.getElementById("goals").value = "";
+    document.getElementById("timeLimit").value = "";
+  }
+
+  function renderAgendas() {
+    agendaList.innerHTML = "";
+    agendas.forEach((a, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div>
+          <strong>${a.name}</strong><br>
+          <small>Goals: ${a.goals.join(", ")}</small><br>
+          <small>Time: ${Math.floor(a.time/60)} mins</small>
+        </div>
+        <div style="display:flex; gap:5px;">
+          <button onclick="startStudy(${i})">Start</button>
+          <button class="delete-btn" onclick="deleteAgenda(${i})">Delete</button>
+        </div>
+
+        <div class="agenda-date">${date}</div>
+      `;
+      agendaList.appendChild(li);
+    });
+  }
+
+  function deleteAgenda(index) {
+    if (confirm("Are you sure you want to delete this agenda?")) {
+      agendas.splice(index, 1);
+      localStorage.setItem("agendas", JSON.stringify(agendas));
+      renderAgendas();
+    }
+  }
+
+  function startStudy(index) {
+    currentAgendaIndex = index;
+    const agenda = agendas[index];
+    remainingTime = agenda.time;
+    document.getElementById("currentAgenda").textContent = agenda.name;
+    goalList.innerHTML = agenda.goals.map(g => `<div>• ${g}</div>`).join("");
+    studyModal.classList.add("active");
+    startTimer();
+    saveSession(true);
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      remainingTime--;
+      saveSession(true);
+
+      const minutes = Math.floor(Math.abs(remainingTime) / 60).toString().padStart(2, "0");
+      const seconds = Math.abs(remainingTime % 60).toString().padStart(2, "0");
+      timerDisplay.textContent = (remainingTime < 0 ? "-" : "") + `${minutes}:${seconds}`;
+      timerDisplay.style.color = remainingTime < 0 ? "#ef4444" : "white";
+
+      if (remainingTime === -60) {
+        showTimeUpMessage();
+      }
+    }, 1000);
+  }
+
+  function endStudy() {
+    clearInterval(timerInterval);
+    studyModal.classList.remove("active");
+    localStorage.removeItem("activeSession");
+
+    const msg = document.getElementById("timeUpMsg");
+    if (msg) msg.remove();
+
+    const agenda = agendas[currentAgendaIndex];
+    reflectAgenda.textContent = agenda.name;
+    reflectionGoals.innerHTML = agenda.goals.map((g,i)=>
+      `<label><input type="checkbox" id="goal${i}"> ${g}</label>`
+    ).join("");
+
+    reviewModal.classList.add("active");
+  }
+
+  function completeReflection() {
+    reviewModal.classList.remove("active");
+    alert("Great work! 🎓 Moving on to the next agenda.");
+  }
+
+  function showTimeUpMessage() {
+    if (document.getElementById("timeUpMsg")) return;
+    const msg = document.createElement("div");
+    msg.id = "timeUpMsg";
+    msg.textContent = "⏰ Time’s Up! Take a short break before your next task.";
+    msg.style.position = "fixed";
+    msg.style.bottom = "40px";
+    msg.style.left = "50%";
+    msg.style.transform = "translateX(-50%)";
+    msg.style.background = "#ef4444";
+    msg.style.padding = "12px 24px";
+    msg.style.borderRadius = "12px";
+    msg.style.fontSize = "1.1rem";
+    msg.style.fontWeight = "600";
+    msg.style.color = "white";
+    msg.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
+    msg.style.animation = "blink 8s infinite";
+    msg.style.zIndex = "2000";
+    document.body.appendChild(msg);
+  }
+</script>
+</body>
+</html>
